@@ -52,8 +52,8 @@ USE_BUILDKERNEL=true
 # (to reflect setting of "emtee" USE flag)
 USE_EMTEE=false
 # following variable is conformed on installation by ebuild
-# (to reflect setting of "pgmerge" USE flag)
-USE_PGMERGE=false
+# (to reflect setting of "pmerge" USE flag)
+USE_PMERGE=false
 VERBOSITYFLAG=""
 ASKFLAG=""
 ALERTFLAG=""
@@ -62,7 +62,7 @@ EMERGEARGS=""
 BUILDKERNEL=""
 BUILDKERNELARGS=""
 EIXSYNCARGS=""
-PGMERGE=""
+PMERGE=""
 PUMP=""
 NOPUMP="-distcc -distcc-pump"
 FALLBACK_SENTINEL="/tmp/.full-emptytree-emerge-performed"
@@ -85,7 +85,7 @@ declare -i ARG_IGNORE_REQUIRED_CHANGES=0 ARG_NO_CUSTOM_UPDATERS=0
 declare -i ARG_NO_FIXUPS=0
 declare -i ARG_NO_EIX_METADATA_UPDATE=0 ARG_NO_NOCACHE=0
 declare -i ARG_NO_MODULE_REBUILD=0
-declare -i ARG_NO_PGMERGE=0
+declare -i ARG_NO_PMERGE=0
 declare -i ADJUSTMENT=19
 # force TERM if none found (e.g. when running from cron)
 # otherwise mach builds (firefox etc.) will fail
@@ -285,16 +285,16 @@ try_emtee_update_if_enabled() {
     fi
 }
 
-try_pgmerge_if_enabled() {
-    # if the pgmerge USE flag is enabled, try using pgmerge
+try_pmerge_if_enabled() {
+    # if the pmerge USE flag is enabled, try using pmerge
     # for a more efficient update process
-    if "${USE_PGMERGE}"; then
-        show "Attempting to update @world set using pgmerge..."
-        # pgmerge is experimental but can be faster
-        if ${PUMP} pgmerge ${ASKFLAG} ${ALERTFLAG} ${VERBOSITYFLAG} ${EMERGEARGS} --deep --with-bdeps=y --changed-use --update --backtrack=50 @world; then
-            show "pgmerge run completed successfully!"
+    if "${USE_PMERGE}"; then
+        show "Attempting to update @world set using pmerge..."
+        # pmerge is experimental but can be faster
+        if ${PUMP} pmerge ${ASKFLAG} ${ALERTFLAG} ${VERBOSITYFLAG} ${EMERGEARGS} --deep --with-bdeps=y --changed-use --update --backtrack=50 @world; then
+            show "pmerge run completed successfully!"
         else
-            warning "pgmerge @world build did not complete successfully!"
+            warning "pmerge @world build did not complete successfully!"
         fi
     fi
 }
@@ -651,7 +651,7 @@ Options:
                         automatically make necessary changes to config files
   -E, --no-emtee        don't attempt to use the emtee tool, even when the
                         eponymous USE flag has been enabled
-  -g, --pgmerge         try to use pgmerge for updates (experimental)
+  -g, --pmerge         try to use pmerge for updates (experimental)
   -F, --no-fixups
                         do not attempt to run /etc/cron.weekly/fixup, even
                         where this file is present and executable (fixups
@@ -751,7 +751,7 @@ process_command_line_options() {
     declare -i RC
     set +e
         # error trapping off, as we want to handle errors
-        TEMP="$(getopt -o aAb:cCde:EFghiikmMnNpr:SvVx: --long ask,alert,buildkernel-args:,dispatch-conf,no-custom-updaters,deploy-from-staging,emerge-args:,no-emtee,pgmerge,no-fixups,help,ignore-required-changes,keep-old-distfiles,no-eix-metadata-update,no-module-rebuild,no-kernel-upgrade,no-nocache,no-perl-cleaner,adjustment:,no-eix-sync,verbose,version,eix-sync-args: -n "${PROGNAME}" -- "${@}")"
+        TEMP="$(getopt -o aAb:cCde:EFghiikmMnNpr:SvVx: --long ask,alert,buildkernel-args:,dispatch-conf,no-custom-updaters,deploy-from-staging,emerge-args:,no-emtee,pmerge,no-fixups,help,ignore-required-changes,keep-old-distfiles,no-eix-metadata-update,no-module-rebuild,no-kernel-upgrade,no-nocache,no-perl-cleaner,adjustment:,no-eix-sync,verbose,version,eix-sync-args: -n "${PROGNAME}" -- "${@}")"
         RC="${?}"
     set -e
     if ((RC!=0)); then
@@ -778,7 +778,7 @@ process_command_line_options() {
                     *) EMERGEARGS="${2}" ; shift 2 ;;
                 esac ;;
             -E|--no-emtee) USE_EMTEE=false ; shift ;;
-            -g|--pgmerge) USE_PGMERGE=true ; shift ;;
+            -g|--pmerge) USE_PMERGE=true ; shift ;;
             -F|--no-fixups) ARG_NO_FIXUPS=1 ; shift ;;
             -h|--help) ARG_HELP=1 ; shift ;;
             -i|--ignore-required-changes) ARG_IGNORE_REQUIRED_CHANGES=1 ; shift ;;
@@ -816,7 +816,7 @@ process_command_line_options() {
     # setup emerge, buildkernel commands with specified niceness
     EMERGE="nice -n ${ADJUSTMENT} emerge"
     BUILDKERNEL="nice -n ${ADJUSTMENT} buildkernel"
-    PGMERGE="nice -n ${ADJUSTMENT} pgmerge"
+    PMERGE="nice -n ${ADJUSTMENT} pmerge"
     # set verbosity
     if ((ARG_VERBOSE==1)); then
         VERBOSITY+=1
@@ -857,7 +857,7 @@ run_fixups_if_present
 ensure_portage_itself_is_up_to_date
 ensure_genup_itself_is_up_to_date
 try_emtee_update_if_enabled
-try_pgmerge_if_enabled
+try_pmerge_if_enabled
 update_all_packages_in_world_set_and_dependencies
 remove_unreferenced_packages
 rebuild_external_modules_if_necessary
